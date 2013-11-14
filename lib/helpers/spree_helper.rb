@@ -21,7 +21,6 @@
 #             N.B Some or all of Spree Tests may fail very first time run,
 #             as the database is auto generated
 # =>          
-require 'spree'
 require 'spree_core'
     
 module DataShift
@@ -35,7 +34,7 @@ module DataShift
     # Helpers so we can cope with both pre 1.0 and post 1.0 versions of Spree in same datashift version
 
     def self.get_spree_class(x)
-      if(is_namespace_version())    
+      if is_namespace_version?    
         ModelMapper::class_from_string("Spree::#{x}")
       else
         ModelMapper::class_from_string(x.to_s)
@@ -43,7 +42,7 @@ module DataShift
     end
       
     def self.get_product_class
-      if(is_namespace_version())
+      if is_namespace_version?
         Object.const_get('Spree').const_get('Product')
       else
         Object.const_get('Product')
@@ -73,10 +72,10 @@ module DataShift
     end
     
     def self.version
-      Gem.loaded_specs['spree'] ? Gem.loaded_specs['spree'].version.version : "0.0.0"
+      Gem.loaded_specs['spree_core'] ? Gem.loaded_specs['spree_core'].version.version : "0.0.0"
     end
     
-    def self.is_namespace_version
+    def self.is_namespace_version?
       SpreeHelper::version.to_f >= 1
     end
   
@@ -88,8 +87,7 @@ module DataShift
       File.join(root, 'app')
     end
 
-    def self.load()
-      require 'spree'
+    def self.load
       require 'spree_core'
     end   
   end
