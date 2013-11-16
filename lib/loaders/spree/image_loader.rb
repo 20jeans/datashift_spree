@@ -17,32 +17,30 @@ module DataShift
     #   2+) The full path(s) to the Images to attach to Product from column 1
     #
     class ImageLoader < SpreeBaseLoader
-  
       def initialize(image = nil, options = {})
-        
-        super( DataShift::SpreeHelper::get_spree_class('Image'), true, image, options )
+        super(DataShift::SpreeHelper::get_spree_class('Image'), true, image, options)
          
-        unless(MethodDictionary.for?(@@product_klass))
-          MethodDictionary.find_operators( @@product_klass )
-          MethodDictionary.build_method_details( @@product_klass )
+        unless MethodDictionary.for?(@@product_klass)
+          MethodDictionary.find_operators(@@product_klass)
+          MethodDictionary.build_method_details(@@product_klass)
         end
         
-        unless(MethodDictionary.for?(@@variant_klass))
-          MethodDictionary.find_operators( @@variant_klass )
-          MethodDictionary.build_method_details( @@variant_klass )
+        unless MethodDictionary.for?(@@variant_klass)
+          MethodDictionary.find_operators(@@variant_klass)
+          MethodDictionary.build_method_details(@@variant_klass)
         end
     
-        puts "Attachment Class is #{SpreeHelper::product_attachment_klazz}" if(@verbose)
+        puts "Attachment Class is #{SpreeHelper::product_attachment_klazz}" if @verbose
       end
       
       # Load object not an Image - need to look it up via Name or SKU
-      def reset( object = nil)
+      def reset(object = nil)
         super(object)
         
         @load_object = nil
       end
       
-      def perform_load( file_name, opts = {} )
+      def perform_load(file_name, opts = {})
         options = opts.dup
         
         # force inclusion means add headers to operator list even not present on Image
@@ -57,41 +55,33 @@ module DataShift
       
       # Called from associated perform_xxxx_load 
          
-      def process()
-        
+      def process
         # TODO - current relies on correct order - i.e lookup column must come before attachment
-        
         @@path_headers ||= ['attachment', 'images', 'path']
            
         operator = @current_method_detail.operator
         
-        if(current_value && ImageLoader::acceptable_path_headers.include?(operator) )
-         
-          add_images( @load_object ) if(@load_object)
-          
-        elsif(current_value && @current_method_detail.operator )    
+        if current_value && ImageLoader::acceptable_path_headers.include?(operator)
+          add_images(@load_object) if(@load_object)
+        elsif current_value && @current_method_detail.operator
           
           # find the db record to assign our Image usually expect either SKU (Variant) or Name (product)
-          if( MethodDictionary::find_method_detail_if_column(@@product_klass, operator) )
+          if MethodDictionary::find_method_detail_if_column(@@product_klass, operator)
             @load_object = get_record_by(@@product_klass, operator, current_value)
-            
-          elsif( MethodDictionary::find_method_detail_if_column(@@variant_klass, operator) )
+          elsif MethodDictionary::find_method_detail_if_column(@@variant_klass, operator)
             @load_object = get_record_by(@@variant_klass, operator, current_value)
           else
             raise "No Spree class can be searched for by #{operator}"
           end  
           
-          unless(@load_object)
+          unless @load_object
             puts "WARNING: Could not find a record where #{operator} == #{current_value}"
             return
           else
             puts "Image Attachment on record #{@load_object.inspect}"
           end
-             
         end
-        
       end
-      
     end
   end      
 end

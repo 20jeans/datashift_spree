@@ -12,45 +12,34 @@
 require 'excel_exporter'
   
 module DatashiftSpree
-        
-    class Reports < Thor     
+  class Reports < Thor     
+    include DataShift::Logging
+     
+    desc "no_image", "Spree Products without an image"
   
-      include DataShift::Logging
-       
-      desc "no_image", "Spree Products without an image"
+    def no_image(report = nil)
+      require 'spree_helper'
+      require 'csv_exporter'
+      require 'image_loader'
+
+      require File.expand_path('config/environment.rb')
+
+      klass = DataShift::SpreeHelper::get_spree_class('Product')
     
-      def no_image(report = nil)
-
-        require 'spree_helper'
-        require 'csv_exporter'
-        require 'image_loader'
-
-        require File.expand_path('config/environment.rb')
-
-        klass = DataShift::SpreeHelper::get_spree_class('Product')
-      
-        missing = klass.all.find_all {|p| p.images.size == 0 }
-      
-        puts "There are #{missing.size} Products (of #{klass.count}) without an associated Image"
-      
-        fname = report ? report : "missing_images"
-      
-        if(DataShift::Guards::jruby?)
-          puts "Creating report #{fname}.xls"  
-          DataShift::ExcelExporter.new( fname + '.xls' ).export( missing, :methods => ['sku'] )
-        else
-          puts "Creating report #{fname}.csv"
-          DataShift::CsvExporter.new( fname + '.csv' ).export( missing, :methods => ['sku'] )
-          puts missing.collect(&:name).join('\n')
-        end   
-      
-# TODO - cross check file locations for possible candidates 
-        #image_cache = DataShift::ImageLoading::get_files(@cross_check_location, options)
-        
-        # missing.each { 
-      
-        # puts images.inspect
-      end
+      missing = klass.all.select{|p| p.images.size == 0}
+    
+      puts "There are #{missing.size} Products (of #{klass.count}) without an associated Image"
+    
+      fname = report ? report : "missing_images"
+    
+      if DataShift::Guards::jruby?
+        puts "Creating report #{fname}.xls"  
+        DataShift::ExcelExporter.new(fname + '.xls').export(missing, methods: ['sku'])
+      else
+        puts "Creating report #{fname}.csv"
+        DataShift::CsvExporter.new(fname + '.csv').export(missing, methods: ['sku'])
+        puts missing.collect(&:name).join('\n')
+      end   
     end
-
+  end
 end

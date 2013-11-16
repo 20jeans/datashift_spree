@@ -45,7 +45,7 @@ module DataShift
     #   :image_path_prefix : A common path to prefix before each image path
     #                        e,g to specifiy particular drive  {:image_path_prefix => 'C:\' }
     #
-    def perform_load( file_name, opts = {} )
+    def perform_load(file_name, opts = {})
       
       logger.info "Starting load from file [#{file_name}]"
       
@@ -66,7 +66,7 @@ module DataShift
     #
     #   Example => path_1{:alt => text}|path_2{:alt => more alt blah blah, :position => 5}|path_3{:alt => the alt text for this path}
     #
-    def add_images( record )
+    def add_images(record)
 
       #save_if_new
 
@@ -83,15 +83,13 @@ module DataShift
        
         @spree_uri_regexp ||= Regexp::new('(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:\/~\+#]*[\w\-\@?^=%&amp;\/~\+#])?' )
         
-        if(image.match(@spree_uri_regexp))
-           
+        if image.match(@spree_uri_regexp)
           uri, attributes = image.split(Delimiters::attribute_list_start)
-          
           uri.strip!
           
           logger.debug("Processing IMAGE from an URI #{uri.inspect} #{attributes.inspect}")
           
-          if(attributes)
+          if attributes
             #TODO move to ColumnPacker unpack ?
             attributes = attributes.split(', ').map{|h| h1,h2 = h.split('=>'); {h1.strip! => h2.strip!}}.reduce(:merge)
           else
@@ -116,9 +114,7 @@ module DataShift
           @current_image_temp_file = Tempfile.new([base, extname], :encoding => 'ascii-8bit')
                     
           begin
-  
             # TODO can we handle embedded img src e.g from Mechanize::Page::Image ?      
-
             # If I call image.save(@current_image_temp_file.path) then it creates a new file with a .1 extension
             # so the real temp file data is empty and paperclip chokes
             # so this is a copy from the Mechanize::Image save method.  don't like it much, very brittle, but what to do ...
@@ -130,19 +126,15 @@ module DataShift
 
             # create_attachment(klass, attachment_path, record = nil, attach_to_record_field = nil, options = {})
             attachment = create_attachment(@@image_klass, @current_image_temp_file.path, nil, nil, attributes)
-            
           rescue => e
             puts "ERROR: Failed to process image from URL #{uri}", e.message
             logger.error("Failed to create Image from URL #{uri}")
             raise DataShift::DataProcessingError.new("Failed to create Image from URL #{uri}")
-       
           ensure 
             @current_image_temp_file.close
             @current_image_temp_file.unlink
           end
-
         else     
-          
           path, alt_text = image.split(Delimiters::name_value_delim)
 
           logger.debug("Processing IMAGE from PATH #{path.inspect} #{alt_text.inspect}")
@@ -161,11 +153,8 @@ module DataShift
           puts "ERROR - Failed to assign attachment to #{owner.class} #{owner.id}"
           logger.error("Failed to assign attachment to #{owner.class} #{owner.id}")
         end
-
       end
-
       record.save
-
     end
   end
 end

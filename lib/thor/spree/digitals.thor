@@ -13,13 +13,10 @@
 # Note, not DataShift, case sensitive, create namespace for command line : datashift
 
 require 'datashift_spree'
-
 require 'spree_helper'
 
 module DatashiftSpree 
-  
   class Digitals < Thor
-
     include DataShift::Logging
 
     x=<<EOS
@@ -39,11 +36,11 @@ EOS
     
     desc "bulk", x
     
-    method_option :input, :aliases => '-i', :required => true, :desc => "The import path containing assets"
-    method_option :field, :aliases => '-f', :default => 'SKU', :desc => "The field to lookup the Variant"
-    method_option :split_file_name_on,  :type => :string, :desc => "delimiter to progressivley split filename for lookup", :default => ' '
+    method_option :input, aliases: '-i', required: true, desc: "The import path containing assets"
+    method_option :field, aliases: '-f', default: 'SKU', desc: "The field to lookup the Variant"
+    method_option :split_file_name_on, type: :string, desc: "delimiter to progressivley split filename for lookup", default: ' '
 
-    def bulk()
+    def bulk
 
       # TODO - We're assuming run from a rails app/top level dir...
       # ...can we make this more robust ? e.g what about when using active record but not in Rails app,
@@ -63,8 +60,6 @@ EOS
      
       puts "Running attach with: #{cmd}"
       invoke('datashift:paperclip:attach', [], cmd)
-
     end
-
   end
 end
